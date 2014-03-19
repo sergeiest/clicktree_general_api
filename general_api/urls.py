@@ -18,4 +18,5 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     (r'^api/', include(v1_api.urls)),
+    (r'^api/', include(blocking_api.urls))
 )

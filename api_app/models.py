@@ -27,6 +27,6 @@ class Blockedip(models.Model):
 	active = models.IntegerField(default=1)
 	sourceusername = models.CharField(max_length=50,null=False,blank=False)
 	ip = models.CharField(max_length=100,null=False,blank=False)
-	time = models.DateTimeField(default=datetime.now(pytz.utc))
+	time = models.DateTimeField(auto_now_add=True)
 
 models.signals.post_save.connect(create_api_key, sender=User)

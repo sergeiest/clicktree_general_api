@@ -32,6 +32,10 @@ class BlockedipResource(ModelResource):
 		authorization= Authorization()
 		authentication = ApiKeyAuthentication()
 
+	def get_object_list(self, request):
+		username = request.GET['username']
+		return super(BlockedipResource, self).get_object_list(request).filter(sourceusername=username)
+
 
 	#def dehydrate(self, bundle):
 	#	bundle.data['user'] = bundle.request.META.
