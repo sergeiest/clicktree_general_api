@@ -34,7 +34,11 @@ class BlockedipResource(ModelResource):
 
 	def get_object_list(self, request):
 		username = request.GET['username']
-		return super(BlockedipResource, self).get_object_list(request).filter(sourceusername=username)
+		if 'index' in request.GET:
+			index = request.GET['index']
+			return super(BlockedipResource, self).get_object_list(request).filter(sourceusername=username, id__gt=index)
+		else:
+			return super(BlockedipResource, self).get_object_list(request).filter(sourceusername=username)
 
 
 	#def dehydrate(self, bundle):
