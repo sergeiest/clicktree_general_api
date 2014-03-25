@@ -3,7 +3,7 @@ from tastypie.authentication import ApiKeyAuthentication
 from tastypie.resources import ModelResource, Resource
 from tastypie import fields
 from models import Request, Blockedip
-from helpers.scrapingobject import ScrapingObject
+from helpers.scrapingobject import ScrapingObject, dict2obj
 from serializer import CustomJSONSerializer
 from django.http import HttpResponse, HttpResponseNotFound
 import yaml
@@ -44,10 +44,6 @@ class BlockedipResource(ModelResource):
 
 
 class ScrapingResource(Resource):
-	index = fields.IntegerField(attribute="index")
-	name = fields.CharField(attribute="name")
-	meta = fields.CharField(attribute="meta")
-
 	class Meta:
 		resource_name = 'listnerd'
 		#authorization= Authorization()
@@ -66,7 +62,7 @@ class ScrapingResource(Resource):
 		#ScrapingObject(url_root="http://www.listnerd.com", path="", outdiv='front-lists')	
 		scraper = ScrapingObject()
 
-		for each in scraper._data.items():
+		for each in scraper.data:
 			results.append(dict2obj(each))
 
 		return results

@@ -8,13 +8,12 @@ class ScrapingObject(object):
 
 	def populateData(self, url_root, path, outdiv):
 		forPopulate = getData(url_root, path, outdiv)
-
 		if forPopulate:
 			index = 0
 			for key, value in forPopulate.items():
 				self.data.append({"index":key})
 				
-				for key2, value2 in value:
+				for key2, value2 in value.items():
 					self.data[index][key2] = value2
 
 				index += 1
