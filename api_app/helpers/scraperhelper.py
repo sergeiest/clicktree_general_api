@@ -16,13 +16,19 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 		path = "list/" + path
 		if path == "":
 			path = "list/top-10-video-game-developers"
+	elif name == "search":
+		outdiv ="searchResult"
+		mapping = {"searchResult" : ["card", "name", "description", "meta"]}
+		path = "search?query=" + path
+		if path == "":
+			path = "search?query=netflix"
 	else:
 		outdiv = "front-lists"
 		mapping = MAPPING
 		path = ""
 
 	url = url_root + '/' + path
-	
+
 	soup = bs(urlopen(url))
 
 	found = soup.findAll(attrs = {"id":outdiv})
