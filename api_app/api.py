@@ -70,7 +70,7 @@ class ScrapingResource(Resource):
 			if 'path' in request.GET:
 				pathName = request.GET['path']
 			else:
-				pathName = "list/top-10-video-game-developers"
+				pathName = "top-10-video-game-developers"
 
 		else:
 			methodName = "front-lists"

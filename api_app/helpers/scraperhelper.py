@@ -5,21 +5,24 @@ from urllib2 import urlopen
 OUTDIV = "front-lists"
 MAPPING = {"front-lists": ["card-v2", "name","meta"] }
 
-def getData(url_root="http://www.listnerd.com", path="", name="front-lists"):
-	if name == "front-lists":
+def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
+	if name == "frontpage":
 		outdiv = "front-lists"
 		mapping = MAPPING
 		path = ""
 	elif name == "list":
 		outdiv = "thelist-list"
 		mapping = {"thelist-list" : ["item", "position", "title", "vote"]}
-		path = "list/top-10-video-game-developers"
+		path = "list/" + path
+		if path == "":
+			path = "list/top-10-video-game-developers"
 	else:
-		outdiv = "thelist-list"
+		outdiv = "front-lists"
 		mapping = MAPPING
 		path = ""
 
 	url = url_root + '/' + path
+	
 	soup = bs(urlopen(url))
 
 	found = soup.findAll(attrs = {"id":outdiv})
