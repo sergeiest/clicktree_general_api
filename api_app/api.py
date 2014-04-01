@@ -1,7 +1,9 @@
 from tastypie.authorization import Authorization
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.resources import ModelResource, Resource
+from django.conf.urls import url
 from tastypie import fields
+from tastypie.utils import trailing_slash
 from models import Request, Blockedip
 from helpers.scrapingobject import ScrapingObject, dict2obj
 from serializer import CustomJSONSerializer
@@ -46,17 +48,67 @@ class BlockedipResource(ModelResource):
 class ScrapingResource(Resource):
 	scraper = None
 	index = fields.IntegerField(attribute="index")
-	#name = fields.CharField(attribute="name")
-	#meta = fields.CharField(attribute="meta")
-	#item = fields.IntegerField(attribute="item")
-	#position = fields.IntegerField(attribute="position")
-	#title = fields.CharField(attribute="title")
-	#vote = fields.CharField(attribute="vote")
+	domain = None
 
-	#attributes = ['index', 'name', 'meta', 'item', 'position', 'title', 'vote']
+	def base_urls(self):
+		return [
+	        url(r"^(?P<website_togo>\w+)%s$" % (trailing_slash()), self.wrap_view('dispatch_list'), name="api_dispatch_list"),
+	        url(r"^(?P<website_togo>\w+)/schema%s$" % (trailing_slash()), self.wrap_view('get_schema'), name="api_get_schema"),
+	        url(r"^(?P<website_togo>\w+)/set/(?P<pk_list>\w[\w/;-]*)/$", self.wrap_view('get_multiple'), name="api_get_multiple"),
+	        url(r"^(?P<website_togo>\w+)/(?P<pk>\w[\w/-]*)%s$" % (trailing_slash()), self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
+	    ]
 
 	class Meta:
-		resource_name = 'listnerd'
+		resource_name = 'scraping'
+		#authorization= Authorization()
+		#authentication = ApiKeyAuthentication()
+
+	def get_object_list(self, request):
+		results = []
+		methodName = None
+		pathName = ""
+
+		if 'method' in request.GET:
+			methodName = request.GET['method']
+			if 'path' in request.GET:
+				pathName = request.GET['path']
+			else:
+				pathName = "top-10-video-game-developers"
+
+		else:
+			methodName = "front-lists"
+
+		if self.domain == "picturegram":
+			base_url = "http://www.picturegr.am"
+		else:
+			base_url = "http://www.listnerd.com"
+
+		self.scraper = ScrapingObject(url_root=base_url, name=methodName, path=pathName)
+
+		for each in self.scraper.data:
+			results.append(dict2obj(each))
+
+		return results
+
+
+	def obj_get_list(self, bundle, **kwargs):
+		self.domain = kwargs['website_togo']
+		return self.get_object_list(bundle.request)
+
+	def full_dehydrate(self, bundle, for_list=False):
+		for each in self.scraper.fields:
+			bundle.data[each] = getattr(bundle.obj, each)
+
+		return bundle
+
+
+class ScrapingResource_picturegram(Resource):
+	scraper = None
+	index = fields.IntegerField(attribute="index")
+
+
+	class Meta:
+		resource_name = 'picturegram'
 		#authorization= Authorization()
 		#authentication = ApiKeyAuthentication()
 
@@ -95,32 +147,3 @@ class ScrapingResource(Resource):
 
 		return bundle
 
-	#def dehydrate(self, bundle):
-	#	for each in attributes:
-	#		if not each in bundle.data:
-	#			bundle.data[each] = ""		
-
-	#def dehydrate(self, bundle):
-	#	bundle.data['user'] = bundle.request.META.
-
-#for picturegram (for authentication from his server will be needed)
-# class RequestResource(ModelResource):
-#     class Meta:
-#         queryset = Request.objects.all()
-#         resource_name = 'request'
-#         allowed_methods = ['get','post']
-#         authorization= Authorization()
-#         serializer = CustomJSONSerializer(formats=['json'])
-
-#     def dispatch(self, request_type, request,  **kwargs):
-#         if request.method == 'POST':
-#             response = super(ModelResource, self).dispatch(request_type, request, **kwargs)
-#         if request.method == 'GET':
-#             if 'hub[challenge]' in request.GET:
-#                 response = HttpResponse()
-#                 content = request.GET['hub[challenge]']
-#                 response.write(content)
-#             else:
-#                 response = HttpResponseNotFound()
-
-#         return response
