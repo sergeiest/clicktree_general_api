@@ -3,7 +3,7 @@ import urlparse
 from urllib2 import urlopen
 
 OUTDIV = "front-lists"
-MAPPING = {"front-lists": ["card-v2", "name","meta"] }
+MAPPING = {"front-lists": {"innerdiv" : "card-v2", "name" : "text" , "meta" : "text"} }
 
 def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 	if url_root == "http://www.listnerd.com":
@@ -13,13 +13,13 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 			path = ""
 		elif name == "list":
 			outdiv = "thelist-list"
-			mapping = {"thelist-list" : ["item", "position", "title", "vote"]}
+			mapping = {"thelist-list" : {"innerdiv" : "item", "position" : "text", "title" : "text", "vote": "text"} }
 			path = "list/" + path
 			if path == "":
 				path = "list/top-10-video-game-developers"
 		elif name == "search":
 			outdiv ="searchResult"
-			mapping = {"searchResult" : ["card", "name", "description", "meta"]}
+			mapping = {"searchResult" : { "innerdiv" : "card", "name" : "text", "description" : "text", "meta" : "text"} }
 			path = "search?query=" + path
 			if path == "":
 				path = "search?query=netflix"
@@ -30,12 +30,15 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 	elif url_root == "http://www.picturegr.am":
 		if name == "frontpage":
 			outdiv = "container"
-			mapping = { "container" : ["col-xs-12","thumbnail"], "arefs" : [False, True] }
+			mapping = { "container" : { "innerdiv" : "col-xs-12", "thumbnail": "href" } }
 			path = ""
+		if name == "picture":
+			outdiv = "container"
+			mapping = { "container" : { "innerdiv" : "row", "fillWidth" : "src"}}
 
 
 	url = url_root + '/' + path
-
+	print "url: " + url 
 	soup = bs(urlopen(url))
 
 	found = soup.findAll(attrs = {"id":outdiv})
@@ -48,32 +51,64 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 		return None
 
 	else:
-		innerDiv = mapping[outdiv][0]
-		attributes = mapping[outdiv][1:]
-
-		if "arefs" in mapping:
-			attr_aref = mapping["arefs"][1:]
-
-		allitems = soup.findAll(attrs={"class":innerDiv})
-
+		innerDiv = mapping[outdiv]["innerdiv"]
+		attributes = [key for key in mapping[outdiv].keys() if key != "innerdiv"]
+		innerDivDict = mapping[outdiv]
+		allitems = []
+		foundOne = False
 		index = 0
 
-		for item in allitems:	
-			toreturn[index] = {}
+		for each in found:
+			tempitems = findClassorId(each, innerDiv)
+			if tempitems:
+				allitems.append(tempitems)
 
-			found = []
+		for item in allitems:	
+			print item
+			toreturn[index] = {}
+			foundOne = False
+
 			for attr in attributes:
-				found = item.findAll(attrs = {"class":attr})
-				if found:
-					toreturn[index][attr] = item.findAll(attrs={"class":attr})[0].text.strip()
-					if attr_aref != None and attr_aref[attributes.index((attr))]:
-						if 'href' in item.findAll(attrs={"class":attr})[0]:
-							toreturn[index][attr+"_href"] = item.findAll(attrs={"class":attr})[0]['href']
-			if found:
+				elemdata = getElementData(item, attr, innerDivDict[attr])
+
+				if elemdata != None:
+					foundOne = True
+					toreturn[index][elemdata[0]] = elemdata[1]
+
+			if foundOne:
 				index += 1
 
-		if not found:
-			del(toreturn[index])
+			if not foundOne:
+				del(toreturn[index])
 
 		print toreturn
 		return toreturn
+
+
+def getElementData(wholeitem, tag_name, type_tag):
+	found = []
+	datatoreturn = None
+
+	found = findClassorId(wholeitem, tag_name)
+
+	if found: 
+		if type_tag != "text":
+			if type_tag in found[0]:
+				data = found[0][type_tag]
+				datatoreturn = (tag_name + '_' + type_tag, data)
+
+		else:
+			print found[0]
+			data = found[0].text.strip()
+			datatoreturn = (tag_name, data)
+ 
+	return datatoreturn
+
+
+def findClassorId(item, name):
+	found = []
+	found = item.findAll(attrs = { "class":name })
+	if not found:
+		found = item.findAll(attrs = { "id":name })
+
+	return found
