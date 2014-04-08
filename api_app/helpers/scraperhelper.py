@@ -61,7 +61,8 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 		for each in found:
 			tempitems = findClassorId(each, innerDiv)
 			if tempitems:
-				allitems.append(tempitems)
+				allitems.extend(tempitems)
+
 
 		for item in allitems:	
 			print item
