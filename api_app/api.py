@@ -4,10 +4,11 @@ from tastypie.resources import ModelResource, Resource
 from django.conf.urls import url
 from tastypie import fields
 from tastypie.utils import trailing_slash
-from models import Request, Blockedip
+from models import Request, Blockedip, Users, Apicalls
 from helpers.scrapingobject import ScrapingObject, dict2obj
 from serializer import CustomJSONSerializer
 from django.http import HttpResponse, HttpResponseNotFound
+from datetime import datetime
 import yaml
 import pytz
 import logging
@@ -60,8 +61,8 @@ class ScrapingResource(Resource):
 
 	class Meta:
 		resource_name = 'scraping'
-		#authorization= Authorization()
-		#authentication = ApiKeyAuthentication()
+		authorization= Authorization()
+		authentication = ApiKeyAuthentication()
 
 	def get_object_list(self, request):
 		results = []
@@ -88,6 +89,16 @@ class ScrapingResource(Resource):
 		for each in self.scraper.data:
 			results.append(dict2obj(each))
 
+
+		if 'username' in request.GET:
+			temp_path = None
+			
+			if 'path' in request.GET:
+				temp_path = request.GET['path']
+
+			self.trackUser(request.GET['username'], fdomain = base_url, fmethod = methodName, fpath = temp_path)
+
+
 		return results
 
 
@@ -102,48 +113,14 @@ class ScrapingResource(Resource):
 		return bundle
 
 
-class ScrapingResource_picturegram(Resource):
-	scraper = None
-	index = fields.IntegerField(attribute="index")
+	def trackUser(self, username, fdomain, fmethod, fpath = None):
+		user_id_temp = None
 
-
-	class Meta:
-		resource_name = 'picturegram'
-		#authorization= Authorization()
-		#authentication = ApiKeyAuthentication()
-
-	def get_object_list(self, request):
-		results = []
-		methodName = None
-		pathName = ""
-
-		if 'method' in request.GET:
-			methodName = request.GET['method']
-			if 'path' in request.GET:
-				pathName = request.GET['path']
-			else:
-				pathName = "top-10-video-game-developers"
-
+		if Users.objects.filter(name=username).exists():
+			user_id_temp = Users.objects.get(name=username).id
 		else:
-			methodName = "front-lists"
+			return
 
-		#has to get from the database here (name => path and action)
-		
-		#ScrapingObject(url_root="http://www.listnerd.com", path="", outdiv='front-lists')	
-		self.scraper = ScrapingObject(name=methodName, path=pathName)
-
-		for each in self.scraper.data:
-			results.append(dict2obj(each))
-
-		return results
-
-
-	def obj_get_list(self, bundle, **kwargs):
-		return self.get_object_list(bundle.request)
-
-	def full_dehydrate(self, bundle, for_list=False):
-		for each in self.scraper.fields:
-			bundle.data[each] = getattr(bundle.obj, each)
-
-		return bundle
+		api_call = Apicalls(user_id = user_id_temp, website = fdomain, method= fmethod, path=fpath, created_at=datetime.now(), updated_at=datetime.now())
+		api_call.save()
 
