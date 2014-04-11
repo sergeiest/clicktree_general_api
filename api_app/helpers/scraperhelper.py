@@ -14,7 +14,8 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 		elif name == "list":
 			outdiv = "thelist-list"
 			mapping = {"thelist-list" : {"innerdiv" : "item", "position" : "text", "title" : "text", "vote": "text"} }
-			path = "list/" + path
+			if not path.startswith('list/'):
+				path = "list/" + path
 			if path == "":
 				path = "list/top-10-video-game-developers"
 		elif name == "search":
@@ -34,8 +35,13 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 			path = ""
 		if name == "picture":
 			outdiv = "container"
-			mapping = { "container" : { "innerdiv" : "row", "fillWidth" : "src"}}
-
+			mapping = { "container" : { "innerdiv" : "row", "fillWidth" : "src", "likes" : "text", "comments": "text", "authorlink" : "text"}}
+			if not path.startswith('picture/'):
+				path = name + '/' + path
+		if name == "search":
+			outdiv = "container"
+			mapping = { "container" : { "innerdiv" : "col-xs-12", "thumbnail": "href" } }
+			path = "tag/" + path
 
 	url = url_root + '/' + path
 	print "url: " + url 
@@ -87,14 +93,20 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 
 
 def getElementData(wholeitem, tag_name, type_tag):
+	print "wholeitem " + str(wholeitem)
+	print "tag_name " + tag_name
+	print "type_tag " + type_tag
 	found = []
 	datatoreturn = None
 
 	found = findClassorId(wholeitem, tag_name)
 
+	print "found in element data"
+
 	if found: 
 		if type_tag != "text":
-			if type_tag in found[0]:
+			print "not text"
+			if found[0].has_attr(type_tag):
 				data = found[0][type_tag]
 				datatoreturn = (tag_name + '_' + type_tag, data)
 
