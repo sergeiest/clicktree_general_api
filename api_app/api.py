@@ -1,5 +1,6 @@
 from tastypie.authorization import Authorization
 from tastypie.authentication import ApiKeyAuthentication
+from authorization import ScrapingAuthentication, ScrapingAuthorization
 from tastypie.resources import ModelResource, Resource
 from django.conf.urls import url
 from tastypie import fields
@@ -61,8 +62,9 @@ class ScrapingResource(Resource):
 
 	class Meta:
 		resource_name = 'scraping'
-		authorization= Authorization()
 		authentication = ApiKeyAuthentication()
+		authorization= ScrapingAuthorization()
+
 
 	def get_object_list(self, request):
 		results = []

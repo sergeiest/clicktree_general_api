@@ -20,10 +20,14 @@ def getData(url_root="http://www.listnerd.com", path="", name="frontpage"):
 				path = "list/top-10-video-game-developers"
 		elif name == "search":
 			outdiv ="searchResult"
-			mapping = {"searchResult" : { "innerdiv" : "card", "name" : "text", "description" : "text", "meta" : "text"} }
+			mapping = {"searchResult" : { "innerdiv" : "card", "name" : "text", "image" : "href", "description" : "text", "meta" : "text"} }
 			path = "search?query=" + path
 			if path == "":
 				path = "search?query=netflix"
+		elif name == "discover":
+			outdiv = "searchResult"
+			mapping = {"searchResult" : { "innerdiv" : "card", "name" : "text", "image" : "href", "description" : "text", "meta" : "text"} }
+			path = "category/" + path
 		else:
 			outdiv = "front-lists"
 			mapping = MAPPING
@@ -108,7 +112,10 @@ def getElementData(wholeitem, tag_name, type_tag):
 			print "not text"
 			if found[0].has_attr(type_tag):
 				data = found[0][type_tag]
-				datatoreturn = (tag_name + '_' + type_tag, data)
+				if tag_name == "image" and type_tag == "href":
+					datatoreturn =  ("url_href", data)
+				else:
+					datatoreturn = (tag_name + '_' + type_tag, data)
 
 		else:
 			print found[0]
